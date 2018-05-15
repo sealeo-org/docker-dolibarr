@@ -2,7 +2,7 @@ FROM php:7.1-apache
 
 MAINTAINER Pierre GUINAULT <speed@sealeo.org>
 
-ENV DOLI_VERSION 7.0.1
+ENV DOLI_VERSION 6.0.3
 
 ENV DOLI_INSTALL_AUTO 1
 
@@ -20,18 +20,22 @@ ENV WWW_GROUP_ID 33
 
 ENV PHP_INI_DATE_TIMEZONE 'UTC'
 
+ENV MAIL_DOMAIN_NAME 'localhost'
+
 RUN apt-get update -q && apt-get upgrade -yq \
 	&& apt-get install -yq \
 		libpng12-dev \
 		libjpeg-dev \
-		libldap2-dev \
+    php5-mysql \
+    php5-ldap \
+    libldap2-dev \
     libxml2-dev \
     mysql-client \
 		unzip \
+    exim4 \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu --with-png-dir=/usr --with-jpeg-dir=/usr \
-	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
-	&& docker-php-ext-install mysqli pdo pdo_mysql gd soap zip
+	&& docker-php-ext-install ldap gd mysqli soap zip
 
 # Get Dolibarr
 ADD https://github.com/Dolibarr/dolibarr/archive/${DOLI_VERSION}.zip /tmp/dolibarr.zip
@@ -40,7 +44,12 @@ RUN cp -r /tmp/dolibarr/dolibarr-${DOLI_VERSION}/htdocs/* /var/www/html/ && ln -
 RUN cp -r /tmp/dolibarr/dolibarr-${DOLI_VERSION}/scripts /var/www/
 RUN rm -rf /tmp/dolibarr
 
-EXPOSE 80
+# Remove files used by exim4 (it's will be replace on first boot)
+RUN rm -rf /etc/exim4/update-exim4.conf.conf /etc/mailname
+
+EXPOSE 80 25
+
+VOLUME ["/var/www/documents"]
 
 COPY docker-run.sh /usr/local/bin/
 ENTRYPOINT ["docker-run.sh"]

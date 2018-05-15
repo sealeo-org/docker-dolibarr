@@ -1,6 +1,6 @@
 FROM php:5.6-apache
 
-MAINTAINER Garcia MICHEL <garcia@soamichel.fr>
+MAINTAINER Pierre GUINAULT <speed@sealeo.org>
 
 ENV DOLI_VERSION 7.0.1
 
@@ -25,11 +25,13 @@ RUN apt-get update -q && apt-get upgrade -yq \
 		libpng12-dev \
 		libjpeg-dev \
     libxml2-dev \
+    libldap2-dev
     mysql-client \
 		unzip \
 	&& rm -rf /var/lib/apt/lists/* \
+	&& docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu --with-png-dir=/usr --with-jpeg-dir=/usr \
 	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
-	&& docker-php-ext-install mysqli pdo pdo_mysql gd soap zip
+	&& docker-php-ext-install ldap mysqli pdo pdo_mysql gd soap zip
 
 # Get Dolibarr
 ADD https://github.com/Dolibarr/dolibarr/archive/${DOLI_VERSION}.zip /tmp/dolibarr.zip
